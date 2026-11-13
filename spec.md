@@ -14,11 +14,18 @@
 - Lát cắt (chép từ track).
 - 3 việc tính năng KHÔNG làm, mỗi việc một câu vì sao.
 
+- AI đang làm việc gì: Trợ lý AI thông minh tích hợp trong ví điện tử (eWallet), đảm nhận việc phân tích hành vi giao dịch, tự động gợi ý tài khoản nhận tiền thường xuyên, và hệ thống kiểm duyệt chống gian lận tự động (Anti-fraud & Smart Transaction Assistant).
+
+AI phải ra Quyết định chặn hoặc cho phép một giao dịch chuyển tiền ngay lập tức dựa trên điểm số rủi ro (Risk Score); Quyết định tự động điền / gợi ý ưu tiên tên người nhận hoặc số tiền dựa trên lịch sử giao dịch.
+- 3 tính năng AI sẽ không làm: Không tự ý hoàn tiền hay tự động hủy giao dịch đã thành công mà không có sự xác nhận thủ công từ người dùng; Không tự động thay đổi hạn mức tín dụng hoặc vay tiền thay cho quyết định của chủ tài khoản; Không tự động chia sẻ dữ liệu giao dịch cá nhân của người dùng cho bên thứ ba ngoài hệ thống bảo mật cốt lõi.
+
 ## §2. Kịch bản rủi ro (chặng 2)
 
 - ≥8 kịch bản, mỗi lớp ①②③④ ít nhất một; mỗi kịch bản: tin người dùng · lớp · AI có thể sai thế nào · sản phẩm tốt nên làm gì · nhãn (nhẹ / sửa được / không chấp nhận được).
 - Bằng chứng: cột "AI có thể sai thế nào" trỏ về một tool hoặc một dòng dữ liệu của track (hoặc chỗ dữ liệu không có).
 - Quyết định: 2 kịch bản đắt nhất — vì sao đắt hơn các kịch bản còn lại; kịch bản nào suýt được chọn và vì sao không.
+
+N
 
 ## §3. Khi AI sai (chặng 3)
 

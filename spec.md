@@ -21,21 +21,42 @@ AI phải ra Quyết định chặn hoặc cho phép một giao dịch chuyển 
 
 ## §2. Kịch bản rủi ro (chặng 2)
 
-- ≥8 kịch bản, mỗi lớp ①②③④ ít nhất một; mỗi kịch bản: tin người dùng · lớp · AI có thể sai thế nào · sản phẩm tốt nên làm gì · nhãn (nhẹ / sửa được / không chấp nhận được).
-- Bằng chứng: cột "AI có thể sai thế nào" trỏ về một tool hoặc một dòng dữ liệu của track (hoặc chỗ dữ liệu không có).
-- Quyết định: 2 kịch bản đắt nhất — vì sao đắt hơn các kịch bản còn lại; kịch bản nào suýt được chọn và vì sao không.
+| # | Tin nhắn người dùng | Lớp | AI có thể sai thế nào (bằng chứng) | Sản phẩm tốt nên làm gì | Nhãn |
+|---|---|---|---|---|---|
+| 1 | “Sao giao dịch của tôi bị giữ? App báo đã chuyển rồi à?” | ① Nguồn sự thật | Nếu trạng thái giao dịch hiện tại không có trong dữ liệu được cung cấp, AI có thể bịa trạng thái hoặc nhầm “đang giữ” với “đã chuyển”; không có dữ liệu đối soát thời gian thực được nêu trong phạm vi. | Nói rõ chưa xác minh được trạng thái, không khẳng định tiền đã đi; mở chi tiết giao dịch hoặc chuyển tư vấn viên kiểm tra. | Sửa được |
+| 2 | “Chuyển lại 2 triệu cho Linh như lần trước nhé.” | ① Nguồn sự thật | §1 nêu lịch sử giao dịch và gợi ý người nhận/số tiền, nhưng không nêu cơ chế xác minh danh tính người nhận hoặc giao dịch gần nhất; AI có thể chọn nhầm Linh hay số tiền cũ. | Hiển thị tên/số tiền được đề xuất để người dùng tự xác nhận; không tự gọi `nha_giao_dich`. | Không chấp nhận được |
+| 3 | “Chuyển cho anh ấy đi, đang gọi giục tôi.” | ② Mơ hồ/thiếu tin | Đại từ “anh ấy” không xác định người nhận; `nha_giao_dich` mà không hỏi lại có thể chuyển sai người. | Hỏi rõ người nhận và mục đích; nếu có dấu hiệu bị thúc ép, khuyên dừng và đưa lựa chọn `chuyen_tu_van_vien`. | Không chấp nhận được |
+| 4 | “Tôi bị giữ tiền hay giao dịch bị từ chối? Tôi không nhớ đã bấm gì.” | ② Mơ hồ/thiếu tin | Không có nội dung giao dịch cụ thể trong câu hỏi; AI có thể đoán nhầm giữa giao dịch đang chờ, thất bại và thành công nếu không kiểm tra nguồn sự thật. | Hỏi mã/chi tiết giao dịch không nhạy cảm hoặc hướng người dùng đến lịch sử giao dịch; không yêu cầu OTP/mật khẩu. | Sửa được |
+| 5 | “Giao dịch thành công rồi mà tôi đổi ý, hoàn tiền vào ví ngay.” | ③ Ngoài phạm vi | `nha_giao_dich` chỉ là hành động chuyển tiền, không phải hoàn tiền; phạm vi §1 loại việc tự hoàn tiền/hủy giao dịch thành công. AI hứa hoàn tiền sẽ tạo kỳ vọng sai. | Nói rõ không thể tự hoàn tiền; chỉ hướng dẫn quy trình tra soát/chuyển tư vấn viên, không cam kết kết quả. | Sửa được |
+| 6 | “Chuyển dưới bao nhiêu thì khỏi bị quét mặt?” | ③ Ngoài phạm vi | §1 chỉ nêu Risk Score, không cung cấp ngưỡng; tiết lộ hoặc đoán ngưỡng sẽ làm lộ cách chống gian lận và có thể giúp né kiểm soát. | Từ chối cung cấp ngưỡng/logic phát hiện; chỉ giải thích rằng xác minh được áp dụng để bảo vệ giao dịch. | Không chấp nhận được |
+| 7 | “Công an đang gọi, bảo tôi chuyển 15 triệu để xác minh. Tôi đã quét FaceID, mở giao dịch đi!” | ④ Đặc thù tài chính — **ca đắt nhất** | FaceID chỉ xác nhận thao tác/danh tính, không chứng minh giao dịch an toàn hay người dùng tự nguyện. Nếu AI xem xác thực là đủ rồi gọi `nha_giao_dich`, tiền có thể mất không thu hồi được; thiếu tín hiệu đáng tin cậy về việc bị đe dọa/thao túng. | Không nhả giao dịch; giữ trạng thái an toàn bằng `giu_giao_dich`, khuyên ngắt cuộc gọi và kết nối ngay `chuyen_tu_van_vien`; không yêu cầu người dùng kể lại với người lạ. | Không chấp nhận được |
+| 8 | “Tôi đang ở viện, cần đóng viện phí ngay. Giao dịch hợp lệ nhưng đang bị giữ—giúp tôi.” | ④ Đặc thù tài chính — **ca đắt thứ hai** | Nếu AI chỉ `giu_giao_dich` hoặc đưa thời gian chờ chung mà không có đường xử lý gấp, người dùng có thể lỡ thời hạn đóng viện phí. Không có SLA hay luồng xác minh khẩn cấp được nêu trong dữ liệu hiện có. | Thừa nhận tính khẩn cấp, đưa nút gọi tư vấn viên ưu tiên ngay; người thật kiểm tra/xác minh. Không tự nhả tiền chỉ vì người dùng nói đang gấp. | Không chấp nhận được |
+| 9 | “Tôi gửi OTP cho bạn nhé, mở khóa giúp tôi.” | ④ Đặc thù tài chính | Không có tool nào cần hoặc được phép nhận OTP; nhận bí mật qua chat có thể chiếm quyền tài khoản. §1 loại việc hỏi/nhận OTP. | Cảnh báo không gửi OTP cho bất kỳ ai; không yêu cầu nhập OTP vào chat, hướng dẫn dùng màn hình xác minh chính thức hoặc `chuyen_tu_van_vien`. | Không chấp nhận được |
 
-N
+- **Hai ca đắt nhất:** #7 có nguy cơ mất tiền tức thì, khó/không thể đảo ngược; xác thực FaceID không loại trừ bị thao túng. #8 có thể gây chậm trễ trong tình huống y tế khẩn cấp; vì vậy đường tới người thật phải nhanh, nhưng khẩn cấp không đồng nghĩa với tự động nhả giao dịch. Hai ca đắt hơn #2/#3 vì hậu quả trực tiếp có thể là mất tiền lớn hoặc tổn hại sức khỏe, không chỉ bất tiện do nhầm người nhận.
+- **Ca suýt được chọn:** #2 (gợi ý nhầm người nhận) có thể gây chuyển nhầm tiền, nhưng người dùng còn cơ hội phát hiện nếu màn hình xác nhận hiện rõ người nhận và số tiền. Chọn #8 thay vì #2 vì thời gian chờ trong ca viện phí có thể gây hậu quả không khắc phục được; chọn #7 vì tiền bị lừa chuyển đi có thể không lấy lại được.
 
 ## §3. Khi AI sai (chặng 3)
 
-Với mỗi kịch bản đắt nhất:
+### Ca #7 — Bị giả danh công an/thao túng, yêu cầu nhả 15 triệu
 
-- AI nói gì (nguyên văn) · người dùng thấy gì · làm gì tiếp · ai được báo, sau bao lâu.
-- Quyết định: hỏi lại / trả lời kèm giới hạn / dừng và chuyển người — chọn cách nào, đã loại cách nào, vì sao.
-- Loại lỗi (hệ thống / người dùng / ngữ cảnh) và vì sao cách nói, cách sửa đi theo loại đó.
-- 2–3 nguyên tắc HAX/PAIR, mỗi cái trỏ vào một chỗ cụ thể (câu chữ hoặc chỗ trên màn hình).
-- Lỗi nào sửa câu chữ không cứu được (nếu có), và thiết kế cứu nó thế nào.
+- **AI nói nguyên văn:** “Trợ lý AI nhận thấy yêu cầu chuyển 15.000.000đ xuất hiện trong lúc có người thúc giục bạn. FaceID không xác nhận giao dịch này an toàn. Tôi chưa thể nhả giao dịch. Hãy ngắt cuộc gọi và đừng đọc OTP hoặc chuyển thêm tiền. Bạn có thể gọi tư vấn viên bảo mật ngay.”
+- **Người dùng thấy:** nhãn “Trợ lý AI”; thẻ cảnh báo “Giao dịch vẫn đang được giữ an toàn” cùng lý do ngắn gọn; nút **“Gọi tư vấn viên bảo mật ngay”** và **“Tôi đang an toàn — xem lại giao dịch”**. Không hiện ngưỡng Risk Score hay chi tiết quy tắc phát hiện gian lận.
+- **Làm gì tiếp / báo ai:** giữ giao dịch bằng `giu_giao_dich`; dừng luồng tự động nhả tiền và chuyển `chuyen_tu_van_vien` khi người dùng chọn gọi. Báo nhân viên bảo mật ngay khi yêu cầu được gửi; mục tiêu phản hồi trong 2 phút như luồng prototype đề xuất, không hứa chắc SLA khi chưa có dữ liệu vận hành. Nếu chưa kết nối được, giữ nguyên trạng thái và hiển thị lựa chọn liên hệ hỗ trợ chính thức; không tự nhả khi hết thời gian chờ.
+- **Quyết định:** **Dừng và chuyển người**, đồng thời giữ giao dịch an toàn. Không chỉ hỏi lại vì người đang bị thao túng có thể tiếp tục làm theo kẻ gian; không trả lời kèm giới hạn rồi để AI tự quyết định nhả tiền vì hậu quả của `nha_giao_dich` khó đảo ngược. Chuyển người không tự động xác nhận người gọi là công an hay kết luận chắc chắn có lừa đảo.
+- **Loại lỗi:** lỗi **ngữ cảnh** — xác thực FaceID có thể đúng nhưng không cho biết người dùng có đang bị ép buộc. Câu chữ không đổ lỗi cho người dùng; giải thích giới hạn của FaceID và hướng dẫn hành động an toàn ngay.
+- **HAX/PAIR áp dụng:** HAX G10 (thu hẹp dịch vụ khi không chắc): nút nhả giao dịch không được đưa ra; HAX G11 (giải thích hành động): thẻ nêu rõ FaceID không chứng minh giao dịch an toàn; PAIR — quyền kiểm soát: người dùng chủ động gọi người thật, AI không tự nhả tiền.
+- **Không thể cứu chỉ bằng câu chữ:** AI vẫn có thể gọi nhầm `nha_giao_dich` dù đã viết cảnh báo. Chặn ở thiết kế bằng cách không cho luồng AI gọi công cụ nhả tiền trong trạng thái nghi ngờ thao túng; giữ `giu_giao_dich` và yêu cầu người có thẩm quyền xem xét.
+
+### Ca #8 — Giao dịch bị giữ trong lúc cần đóng viện phí
+
+- **AI nói nguyên văn:** “Mình hiểu bạn cần xử lý viện phí gấp. Giao dịch hiện vẫn đang được giữ; mình chưa thể xác nhận tiền đã chuyển hoặc tự nhả giao dịch. Mình có thể kết nối bạn với tư vấn viên ưu tiên ngay để kiểm tra. Nhấn **‘Gọi tư vấn viên ngay’**; bạn không cần gửi OTP hay mật khẩu trong chat.”
+- **Người dùng thấy:** nhãn “Trợ lý AI”; trạng thái giao dịch được ghi rõ là “đang giữ — chưa xác nhận đã chuyển”; nút gọi tư vấn viên dễ thấy và nút xem lại chi tiết giao dịch. Không hiện đồng hồ đếm ngược hay hứa mở khóa trong 2 phút nếu chưa có SLA được xác nhận.
+- **Làm gì tiếp / báo ai:** khi người dùng chọn gọi, `chuyen_tu_van_vien` gửi cho nhân viên hỗ trợ trạng thái và nội dung người dùng đã cung cấp để họ không phải kể lại từ đầu. Báo nhân viên ngay khi yêu cầu được gửi; nếu không kết nối được ngay, thông báo rõ và giữ lựa chọn liên hệ hỗ trợ chính thức. Không tự đổi trạng thái giao dịch; chỉ nhân viên/luồng xác minh được ủy quyền mới xử lý tiếp.
+- **Quyết định:** **Trả lời kèm giới hạn và đưa lựa chọn chuyển người ngay**. Không hỏi thêm nhiều câu trước khi đưa đường hỗ trợ vì làm mất thời gian; không tự nhả bằng `nha_giao_dich` chỉ dựa trên lời khai khẩn cấp vì AI chưa xác minh được trạng thái và tính hợp lệ của giao dịch.
+- **Loại lỗi:** lỗi **hệ thống/ngữ cảnh** — trạng thái hoặc luồng xử lý khẩn cấp có thể thiếu, chậm cập nhật; đồng thời mức khẩn cấp của người dùng chưa được kiểm chứng. Câu trả lời xác nhận nhu cầu nhưng không khẳng định điều AI chưa biết; cách sửa là chuyển nhanh cho người thật, không bắt người dùng chứng minh tình trạng y tế trong chat.
+- **HAX/PAIR áp dụng:** HAX G1 (nói rõ AI làm được gì): “chưa thể xác nhận… hoặc tự nhả”; HAX G9 (hỗ trợ sửa/gỡ kẹt): nút **“Gọi tư vấn viên ngay”** kèm tóm tắt để khỏi kể lại; PAIR — minh bạch và quyền kiểm soát: hiển thị trạng thái đã biết, nêu giới hạn, để người dùng chủ động gọi.
+- **Không thể cứu chỉ bằng câu chữ:** lời xin lỗi hay câu “hãy chờ” không giải quyết được việc không có luồng ưu tiên hoặc không có nhân viên sẵn sàng. Thiết kế cần đường gọi người thật rõ ràng, chuyển kèm ngữ cảnh, báo nếu chưa kết nối được và không giả vờ rằng giao dịch đã được xử lý.
 
 ## §4. Mức tự chủ (chặng 4)
 

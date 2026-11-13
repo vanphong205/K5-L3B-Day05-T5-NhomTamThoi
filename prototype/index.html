@@ -1,0 +1,1459 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ví An Tâm — Prototype LAB5 · Track 5 (TV1)</title>
+<!--
+  LAB5 · Track 5 · Nhóm tạm thời
+  TV1 — Prototype & Visual UX Designer
+  Ca demo chính: Ca 1 — Người dùng bị thao túng tâm lý, giao dịch 15.000.000 ₫ bị tạm giữ.
+  Nguyên tắc: mọi hành động của AI đều gắn nhãn mức tự chủ; nha_giao_dich KHÔNG BAO GIỜ có nút nhả tiền 1 chạm.
+  Prototype tự chứa: không CDN, không API, không dữ liệu thật. Mở bằng trình duyệt là chạy.
+-->
+<style>
+  :root{
+    --brand:#a50064;
+    --brand-2:#e91e63;
+    --brand-soft:#fff0f6;
+    --bg:#eceef4;
+    --ink:#16161f;
+    --muted:#6d6d80;
+    --line:#e5e5ee;
+    --danger:#c62828;
+    --danger-soft:#fdecec;
+    --warn:#9a5b00;
+    --warn-soft:#fff5e6;
+    --ok:#157347;
+    --ok-soft:#eaf7f0;
+    --radius:16px;
+    --font:"Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    --mono:"Cascadia Code", Consolas, "Courier New", monospace;
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    min-height:100vh;
+    font-family:var(--font);
+    color:var(--ink);
+    background:
+      radial-gradient(1200px 600px at 10% -10%, #f7d9e8 0%, transparent 55%),
+      radial-gradient(900px 500px at 110% 10%, #dcd6f5 0%, transparent 50%),
+      var(--bg);
+    padding:24px 18px 40px;
+  }
+
+  /* ---------- Bố cục 3 cột ---------- */
+  .app-shell{
+    display:grid;
+    grid-template-columns:280px 390px 340px;
+    gap:20px;
+    justify-content:center;
+    align-items:start;
+  }
+  .side{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:16px;
+    box-shadow:0 10px 30px rgba(22,22,31,.06);
+    max-height:844px;
+    overflow:auto;
+    font-size:13px;
+  }
+  .side h2{
+    font-size:11px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin:0 0 10px;
+    font-weight:700;
+  }
+  .side h3{
+    font-size:14px;
+    margin:18px 0 8px;
+  }
+  .side p{ margin:0 0 10px; line-height:1.5; color:#3c3c4a; }
+  .side ul{ margin:0 0 10px; padding-left:18px; line-height:1.55; color:#3c3c4a; }
+  .side li{ margin-bottom:5px; }
+  .side code{
+    font-family:var(--mono);
+    font-size:11.5px;
+    background:#f4f4f8;
+    border:1px solid var(--line);
+    border-radius:5px;
+    padding:1px 4px;
+  }
+
+  .scenario-btn{
+    display:flex;
+    width:100%;
+    gap:10px;
+    align-items:flex-start;
+    text-align:left;
+    padding:10px 11px;
+    margin-bottom:8px;
+    border:1px solid var(--line);
+    background:#fff;
+    border-radius:12px;
+    cursor:pointer;
+    font-family:var(--font);
+    font-size:12.5px;
+    line-height:1.35;
+    color:var(--ink);
+    transition:border-color .15s, background .15s, transform .15s;
+  }
+  .scenario-btn:hover{ border-color:#e3a9c6; background:#fffafc; }
+  .scenario-btn.is-active{
+    border-color:var(--brand);
+    background:var(--brand-soft);
+    box-shadow:inset 3px 0 0 var(--brand);
+  }
+  .scenario-btn__num{
+    flex:0 0 22px;
+    height:22px;
+    border-radius:50%;
+    background:#f0f0f6;
+    color:#4a4a5c;
+    font-weight:700;
+    font-size:11px;
+    display:grid;
+    place-items:center;
+  }
+  .scenario-btn.is-active .scenario-btn__num{ background:var(--brand); color:#fff; }
+  .scenario-btn__txt b{ display:block; font-size:12.5px; }
+  .scenario-btn__txt span{ color:var(--muted); font-size:11.5px; }
+
+  .run-row{ display:flex; gap:8px; margin-top:12px; }
+  .run-btn{
+    flex:1;
+    border:1px solid var(--line);
+    background:#fafafc;
+    border-radius:10px;
+    padding:9px 10px;
+    font-family:var(--font);
+    font-size:12px;
+    font-weight:600;
+    cursor:pointer;
+    color:#33333f;
+  }
+  .run-btn:hover{ background:#f2f2f7; }
+
+  .legend{ display:grid; gap:7px; margin:6px 0 0; }
+  .legend__row{ display:flex; align-items:center; gap:8px; font-size:12px; color:#4a4a5c; }
+
+  /* ---------- Khung điện thoại ---------- */
+  .phone{
+    position:relative;
+    width:390px;
+    height:844px;
+    background:#fff;
+    border-radius:38px;
+    border:1px solid #d8d8e2;
+    box-shadow:0 24px 60px rgba(22,22,31,.18), 0 0 0 8px rgba(255,255,255,.55);
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    margin:0 auto;
+  }
+  .phone::before{
+    content:"";
+    position:absolute;
+    top:7px; left:50%;
+    transform:translateX(-50%);
+    width:104px; height:22px;
+    background:#101018;
+    border-radius:999px;
+    z-index:30;
+  }
+
+  .app-header{
+    flex:0 0 auto;
+    background:linear-gradient(135deg,#7a0049 0%,#a50064 48%,#e91e63 100%);
+    color:#fff;
+    padding:32px 16px 12px;
+  }
+  .app-header__top{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .brand{ display:flex; align-items:center; gap:9px; }
+  .brand__logo{
+    width:32px; height:32px;
+    border-radius:10px;
+    background:rgba(255,255,255,.18);
+    border:1px solid rgba(255,255,255,.4);
+    display:grid; place-items:center;
+    font-weight:800; font-size:12px; letter-spacing:.02em;
+  }
+  .brand__name{ font-size:14.5px; font-weight:700; line-height:1.1; }
+  .brand__sub{ font-size:10.5px; opacity:.85; margin-top:2px; }
+  .status-chip{
+    font-size:10.5px;
+    font-weight:700;
+    padding:5px 9px;
+    border-radius:999px;
+    background:rgba(255,255,255,.16);
+    border:1px solid rgba(255,255,255,.36);
+    white-space:nowrap;
+    max-width:150px;
+    text-align:center;
+  }
+
+  /* ---------- Thanh giữ tiền / rủi ro ---------- */
+  .holdbar{
+    flex:0 0 auto;
+    border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg,#fff7fa,#fff);
+    padding:9px 14px 10px;
+  }
+  .holdbar--warn{ background:linear-gradient(180deg,#fff9ef,#fff); }
+  .holdbar--undone{ background:linear-gradient(180deg,#fff4e2,#fff); }
+  .holdbar__row{ display:flex; align-items:center; gap:8px; }
+  .holdbar__dot{
+    width:8px; height:8px; border-radius:50%;
+    background:var(--danger);
+    box-shadow:0 0 0 3px rgba(198,40,40,.14);
+    flex:0 0 auto;
+  }
+  .holdbar--warn .holdbar__dot{ background:#d98200; box-shadow:0 0 0 3px rgba(217,130,0,.16); }
+  .holdbar--undone .holdbar__dot{ background:#d98200; box-shadow:0 0 0 3px rgba(217,130,0,.16); }
+  .holdbar__title{ font-size:12px; font-weight:700; }
+  .holdbar__amount{ font-size:12px; font-weight:700; color:var(--brand); margin-left:auto; }
+  .holdbar__undo{
+    border:1px solid var(--line);
+    background:#fff;
+    color:#3c3c4a;
+    font-family:var(--font);
+    font-size:10.5px;
+    font-weight:600;
+    padding:4px 8px;
+    border-radius:8px;
+    cursor:pointer;
+  }
+  .holdbar__undo:hover{ border-color:#c9c9d6; }
+  .risk{
+    height:5px;
+    border-radius:999px;
+    background:#ececf3;
+    margin:8px 0 6px;
+    overflow:hidden;
+  }
+  .risk__fill{ height:100%; border-radius:999px; background:linear-gradient(90deg,#f0a0b8,#c62828); }
+  .risk__fill--warn{ background:linear-gradient(90deg,#f6cf8f,#d98200); }
+  .risk__fill--ok{ background:linear-gradient(90deg,#9fdcc0,#157347); }
+  .holdbar__note{ font-size:10.5px; color:var(--muted); line-height:1.4; }
+
+  /* ---------- Vùng chat ---------- */
+  .chat{
+    flex:1 1 auto;
+    overflow-y:auto;
+    padding:14px 12px 18px;
+    background:
+      radial-gradient(400px 200px at 100% 0%, #fdf1f6 0%, transparent 70%),
+      #fafafd;
+    scroll-behavior:smooth;
+  }
+  .chat::-webkit-scrollbar{ width:6px; }
+  .chat::-webkit-scrollbar-thumb{ background:#dcdce6; border-radius:99px; }
+
+  .row{ display:flex; margin-bottom:12px; }
+  .row--ai{ align-items:flex-start; gap:7px; }
+  .row--user{ justify-content:flex-end; }
+
+  .avatar{
+    flex:0 0 26px;
+    width:26px; height:26px;
+    border-radius:50%;
+    background:linear-gradient(135deg,#a50064,#e91e63);
+    color:#fff;
+    font-size:9.5px;
+    font-weight:800;
+    display:grid; place-items:center;
+    margin-top:16px;
+    box-shadow:0 2px 6px rgba(165,0,100,.25);
+  }
+  .bubble-wrap{ max-width:84%; }
+
+  .ai-label{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    font-size:10px;
+    font-weight:700;
+    letter-spacing:.03em;
+    text-transform:uppercase;
+    color:var(--brand);
+    margin:0 0 4px 2px;
+  }
+  .ai-label__dot{ width:5px; height:5px; border-radius:50%; background:#33c07a; }
+
+  .bubble{
+    padding:10px 12px;
+    border-radius:14px;
+    font-size:12.5px;
+    line-height:1.52;
+    word-break:break-word;
+  }
+  .bubble p{ margin:0 0 7px; }
+  .bubble p:last-child{ margin-bottom:0; }
+  .bubble ol, .bubble ul{ margin:6px 0 0; padding-left:17px; }
+  .bubble li{ margin-bottom:3px; }
+  .bubble b{ font-weight:700; }
+
+  .bubble--ai{
+    background:#fff;
+    border:1px solid var(--line);
+    border-top-left-radius:5px;
+    box-shadow:0 2px 8px rgba(22,22,31,.05);
+  }
+  .bubble--ai.bubble--alert{ border-color:#f3c2c2; background:#fffafa; }
+  .bubble--user{
+    background:linear-gradient(135deg,#a50064,#d81b60);
+    color:#fff;
+    border-bottom-right-radius:5px;
+    box-shadow:0 3px 10px rgba(165,0,100,.22);
+    max-width:82%;
+  }
+
+  .sysline{
+    text-align:center;
+    font-size:10.5px;
+    color:var(--muted);
+    margin:2px 0 12px;
+  }
+  .sysline span{
+    background:#eef0f6;
+    border-radius:999px;
+    padding:3px 9px;
+  }
+
+  /* ---------- Thẻ bằng chứng ---------- */
+  .card{
+    margin-top:9px;
+    border:1px solid #f0c4d6;
+    background:#fff7fa;
+    border-radius:12px;
+    padding:10px 11px;
+  }
+  .card--warn{ border-color:#f0d6ae; background:#fffaf1; }
+  .card--ok{ border-color:#bfe6d2; background:#f4fcf8; }
+  .card__kicker{
+    font-size:9.5px;
+    text-transform:uppercase;
+    letter-spacing:.07em;
+    font-weight:800;
+    color:var(--brand);
+    margin-bottom:3px;
+  }
+  .card--warn .card__kicker{ color:var(--warn); }
+  .card--ok .card__kicker{ color:var(--ok); }
+  .card__title{ font-size:12px; font-weight:700; margin-bottom:6px; }
+  .card__rows{ display:grid; gap:5px; }
+  .card__row{ display:flex; gap:8px; font-size:11px; line-height:1.35; }
+  .card__row dt{ flex:0 0 104px; color:var(--muted); }
+  .card__row dd{ margin:0; flex:1; font-weight:600; color:#25252f; }
+  .card__note{
+    margin-top:8px;
+    padding-top:7px;
+    border-top:1px dashed #ecd3de;
+    font-size:10.5px;
+    color:#7a4b60;
+    line-height:1.4;
+  }
+  .card--warn .card__note{ border-top-color:#eedcbf; color:#7a5a22; }
+  .card--ok .card__note{ border-top-color:#cdeadd; color:#2c6a51; }
+
+  .tag{
+    display:inline-flex;
+    align-items:center;
+    gap:3px;
+    font-size:9.5px;
+    font-weight:800;
+    letter-spacing:.02em;
+    padding:2px 6px;
+    border-radius:999px;
+    border:1px solid transparent;
+    vertical-align:1px;
+    white-space:nowrap;
+  }
+  .tag--auto{ background:var(--ok-soft); color:var(--ok); border-color:#bfe6d2; }
+  .tag--approve{ background:var(--warn-soft); color:var(--warn); border-color:#f0d6ae; }
+  .tag--deny{ background:#f1f1f5; color:#5a5a6a; border-color:#dcdce6; }
+  .tag--ai{ background:var(--brand-soft); color:var(--brand); border-color:#f0c4d6; }
+
+  .riskpill{
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    font-size:10px;
+    font-weight:800;
+    padding:2px 7px;
+    border-radius:999px;
+    background:var(--danger-soft);
+    color:var(--danger);
+    border:1px solid #f3c2c2;
+  }
+  .riskpill--warn{ background:var(--warn-soft); color:var(--warn); border-color:#f0d6ae; }
+  .riskpill--ok{ background:var(--ok-soft); color:var(--ok); border-color:#bfe6d2; }
+
+  .timeline{ display:grid; gap:6px; margin-top:9px; }
+  .timeline__item{ display:flex; gap:8px; font-size:11px; line-height:1.4; }
+  .timeline__time{ flex:0 0 40px; font-weight:700; color:var(--brand); }
+  .timeline__txt{ color:#3c3c4a; }
+
+  /* ---------- Thanh hành động ---------- */
+  .action-bar{
+    flex:0 0 auto;
+    background:#fff;
+    border-top:1px solid var(--line);
+    padding:9px 12px 10px;
+    display:grid;
+    gap:7px;
+    box-shadow:0 -6px 16px rgba(22,22,31,.04);
+  }
+  .btn{
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    width:100%;
+    min-height:40px;
+    padding:8px 12px;
+    border-radius:11px;
+    border:1px solid transparent;
+    font-family:var(--font);
+    font-size:12.5px;
+    font-weight:700;
+    cursor:pointer;
+    transition:transform .12s, filter .15s, background .15s;
+  }
+  .btn:active{ transform:scale(.985); }
+  .btn--primary{
+    background:linear-gradient(135deg,#a50064,#d81b60);
+    color:#fff;
+    box-shadow:0 4px 12px rgba(165,0,100,.24);
+  }
+  .btn--primary:hover{ filter:brightness(1.06); }
+  .btn--ghost{
+    background:#fff;
+    border-color:#d9d9e4;
+    color:#33333f;
+  }
+  .btn--ghost:hover{ background:#f7f7fb; }
+  .btn--danger{
+    background:#fff;
+    border-color:#eab6b6;
+    color:var(--danger);
+  }
+  .btn--danger:hover{ background:#fff6f6; }
+  .btn__tag{
+    font-size:9px;
+    font-weight:800;
+    padding:2px 6px;
+    border-radius:999px;
+    background:rgba(255,255,255,.2);
+    border:1px solid rgba(255,255,255,.35);
+    letter-spacing:.02em;
+  }
+  .btn--ghost .btn__tag, .btn--danger .btn__tag{
+    background:#f4f4f8;
+    border-color:#e2e2ec;
+    color:#5a5a6a;
+  }
+  .btn--danger .btn__tag{ background:var(--warn-soft); color:var(--warn); border-color:#f0d6ae; }
+
+  .disclaimer{
+    flex:0 0 auto;
+    text-align:center;
+    font-size:9.5px;
+    color:#9a9aab;
+    background:#fff;
+    padding:0 12px 9px;
+  }
+
+  /* ---------- Modal (mức Cần người duyệt) ---------- */
+  .modal-backdrop{
+    position:absolute;
+    inset:0;
+    background:rgba(16,16,24,.38);
+    z-index:40;
+  }
+  .modal{
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    width:320px;
+    max-height:70%;
+    overflow:auto;
+    background:#fff;
+    border-radius:18px;
+    box-shadow:0 24px 60px rgba(0,0,0,.3);
+    z-index:41;
+    padding:14px;
+  }
+  .modal__kicker{
+    font-size:9.5px;
+    font-weight:800;
+    letter-spacing:.07em;
+    text-transform:uppercase;
+    color:var(--warn);
+    margin-bottom:3px;
+  }
+  .modal__head{ display:flex; align-items:flex-start; gap:8px; margin-bottom:10px; }
+  .modal__head h3{ margin:0; font-size:14px; line-height:1.3; }
+  .modal__head .tag{ margin-left:auto; flex:0 0 auto; }
+  .modal__body{
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:9px 10px;
+    background:#fbfbfe;
+  }
+  .modal__row{ display:flex; gap:8px; font-size:11px; line-height:1.4; margin-bottom:6px; }
+  .modal__row:last-child{ margin-bottom:0; }
+  .modal__row dt{ flex:0 0 96px; color:var(--muted); }
+  .modal__row dd{ margin:0; flex:1; font-weight:600; color:#25252f; }
+  .modal__warn{
+    margin-top:9px;
+    background:var(--warn-soft);
+    border:1px solid #f0d6ae;
+    color:#7a4c00;
+    border-radius:10px;
+    padding:8px 10px;
+    font-size:10.5px;
+    line-height:1.45;
+    font-weight:600;
+  }
+  .modal__actions{ display:grid; gap:7px; margin-top:11px; }
+  .modal__foot{ margin-top:7px; font-size:9.5px; color:var(--muted); text-align:center; line-height:1.4; }
+
+  /* ---------- Bảng mức tự chủ (cột phải) ---------- */
+  .matrix{ display:grid; gap:8px; }
+  .tool{
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:9px 10px;
+    background:#fff;
+  }
+  .tool__top{ display:flex; align-items:center; gap:6px; }
+  .tool__name{
+    font-family:var(--mono);
+    font-size:11.5px;
+    font-weight:700;
+    color:#22222c;
+  }
+  .tool__top .tag{ margin-left:auto; }
+  .tool__why{ margin:5px 0 0; font-size:10.5px; line-height:1.45; color:#5c5c6c; }
+
+  .rule{
+    border-left:3px solid var(--brand);
+    background:#fbf8fb;
+    border-radius:0 10px 10px 0;
+    padding:8px 10px;
+    font-size:10.5px;
+    line-height:1.45;
+    color:#5c5c6c;
+    margin-top:10px;
+  }
+  .rule b{ color:var(--brand); }
+
+  .kbd{
+    font-family:var(--mono);
+    font-size:10.5px;
+    background:#f4f4f8;
+    border:1px solid var(--line);
+    border-bottom-width:2px;
+    border-radius:5px;
+    padding:1px 5px;
+    color:#3c3c4a;
+  }
+
+  /* ---------- Chế độ chụp ảnh đánh số ---------- */
+  .shot .side{ display:none; }
+  .shot{ background:#fff; padding:0; }
+  .shot .app-shell{ display:block; padding:0; }
+  .shot .phone{
+    width:390px; height:844px;
+    border:0; border-radius:0; box-shadow:none;
+    margin:0;
+  }
+  .shot .phone::before{ display:none; }
+  [data-mark]{ position:relative; }
+  /* marker của nút trong thanh hành động: đặt vào góc trên-trái để không bị cắt mép */
+  .action-bar .btn[data-mark] > .mark{ left:6px; top:-9px; }
+  /* marker 1: ngay sau nhãn "Trợ lý AI" */
+  .ai-label[data-mark] > .mark{ left:calc(100% + 7px); right:auto; top:-7px; }
+  /* marker 3: ngay sau tiêu đề "Đang giữ an toàn", không đè nút Hoàn tác */
+  .holdbar__title[data-mark] > .mark{ left:calc(100% + 7px); right:auto; top:-8px; }
+  .mark{
+    position:absolute;
+    top:-10px;
+    left:-10px;
+    z-index:60;
+    width:23px; height:23px;
+    border-radius:50%;
+    background:#101018;
+    color:#fff;
+    font:800 12px/23px var(--font);
+    text-align:center;
+    box-shadow:0 0 0 3px #fff, 0 3px 8px rgba(0,0,0,.35);
+    pointer-events:none;
+  }
+
+  @media (max-width:1120px){
+    body{ padding:16px 10px 30px; }
+    .app-shell{ grid-template-columns:390px; }
+    .side{ max-height:none; width:390px; margin:0 auto; }
+    .side--right{ order:3; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- ============ CỘT TRÁI: chọn kịch bản + cách demo ============ -->
+  <aside class="side side--left">
+    <h2>Kịch bản demo</h2>
+
+    <button class="scenario-btn is-active" data-scenario="scam">
+      <span class="scenario-btn__num">1</span>
+      <span class="scenario-btn__txt"><b>Bị thao túng tâm lý</b><span>15.000.000 ₫ · giả danh công an · ca đắt nhất</span></span>
+    </button>
+    <button class="scenario-btn" data-scenario="hospital">
+      <span class="scenario-btn__num">2</span>
+      <span class="scenario-btn__txt"><b>Kẹt viện phí lúc nửa đêm</b><span>8.000.000 ₫ · khẩn cấp · không bỏ rơi</span></span>
+    </button>
+    <button class="scenario-btn" data-scenario="normal">
+      <span class="scenario-btn__num">3</span>
+      <span class="scenario-btn__txt"><b>Ca bình thường</b><span>200.000 ₫ · không được làm phiền</span></span>
+    </button>
+    <button class="scenario-btn" data-scenario="outscope">
+      <span class="scenario-btn__num">4</span>
+      <span class="scenario-btn__txt"><b>Ngoài thẩm quyền &amp; khoá ví</b><span>đủ 3 mức: Tự làm · Cần duyệt · Cấm</span></span>
+    </button>
+
+    <div class="run-row">
+      <button class="run-btn" id="restartBtn">↺ Chạy lại kịch bản</button>
+    </div>
+
+    <h3>Cách bấm khi demo</h3>
+    <ul>
+      <li>Bấm <b>“Mở chặn để chuyển tiền”</b> → AI <b>không nhả tiền</b>, chỉ mở yêu cầu duyệt.</li>
+      <li>Trong hộp duyệt, bấm <b>“Kết nối tư vấn viên ngay”</b> → hồ sơ gửi kèm, không bắt kể lại.</li>
+      <li>Bấm <b>“Hoàn tác”</b> ở thanh giữ tiền → bỏ tạm giữ, nhưng tiền vẫn <b>không</b> rời ví.</li>
+      <li>Chọn <b>Ca 3</b> để chứng minh không làm phiền người bình thường.</li>
+      <li><b>Ca 4</b> minh hoạ đủ 3 mức: tạm khoá ví (<b>Tự làm</b>) · khoá vĩnh viễn (<b>Cần duyệt</b>) · hỏi ngưỡng chặn (<b>Cấm</b> — không có nút).</li>
+    </ul>
+
+    <h3>Chú giải nhãn</h3>
+    <div class="legend">
+      <div class="legend__row"><span class="tag tag--auto">Tự làm</span> AI được làm ngay, có thể hoàn tác</div>
+      <div class="legend__row"><span class="tag tag--approve">Cần người duyệt</span> chuyên viên quyết định</div>
+      <div class="legend__row"><span class="tag tag--deny">Cấm</span> không có nút bấm trên giao diện</div>
+    </div>
+
+    <h3>Ảnh đánh số</h3>
+    <p>Mở nhanh chế độ chụp:</p>
+    <p>
+      <a href="?shot=1&amp;s=scam&amp;step=0&amp;marks=1,2,3" style="color:#a50064;font-weight:700">Ảnh 1</a> ·
+      <a href="?shot=1&amp;s=scam&amp;step=1&amp;modal=approve&amp;marks=4,5,6" style="color:#a50064;font-weight:700">Ảnh 2</a>
+    </p>
+    <p style="font-size:11px;color:#8a8a9c">Dữ liệu minh hoạ, không phải giao dịch thật. Không có OTP, số thẻ hay API key trong prototype.</p>
+  </aside>
+
+  <!-- ============ GIỮA: ĐIỆN THOẠI ============ -->
+  <main class="phone" id="phone">
+    <header class="app-header">
+      <div class="app-header__top">
+        <div class="brand">
+          <span class="brand__logo">AT</span>
+          <div>
+            <div class="brand__name">Ví An Tâm</div>
+            <div class="brand__sub">Hỗ trợ giao dịch an toàn</div>
+          </div>
+        </div>
+        <div class="status-chip" id="statusChip">Đang giữ an toàn</div>
+      </div>
+    </header>
+
+    <div id="holdBar"></div>
+    <div class="chat" id="chat" aria-live="polite"></div>
+    <div class="action-bar" id="actionBar"></div>
+    <div class="disclaimer">Dữ liệu minh hoạ — không phải giao dịch thật · Trợ lý AI, không phải người thật</div>
+
+    <div id="modalRoot"></div>
+  </main>
+
+  <!-- ============ CỘT PHẢI: MA TRẬN MỨC TỰ CHỦ (§4) ============ -->
+  <aside class="side side--right">
+    <h2>Mức tự chủ · 5 tool (§4)</h2>
+
+    <div class="matrix">
+      <div class="tool">
+        <div class="tool__top"><span class="tool__name">giu_giao_dich</span><span class="tag tag--auto">Tự làm</span></div>
+        <p class="tool__why">Giữ tiền là hành động an toàn, có <b>hoàn tác</b>. Sai thì chỉ chậm một nhịp, không mất tiền.</p>
+      </div>
+      <div class="tool">
+        <div class="tool__top"><span class="tool__name">yeu_cau_xac_minh</span><span class="tag tag--auto">Tự làm</span></div>
+        <p class="tool__why">Chỉ hỏi thêm bằng chứng, không thay đổi số dư. Người dùng luôn có quyền từ chối.</p>
+      </div>
+      <div class="tool">
+        <div class="tool__top"><span class="tool__name">chuyen_tu_van_vien</span><span class="tag tag--auto">Tự làm</span></div>
+        <p class="tool__why">Là đường lui khi AI không chắc. Không chuyển thì người gấp bị bỏ rơi — hại nhiều hơn.</p>
+      </div>
+      <div class="tool">
+        <div class="tool__top"><span class="tool__name">nha_giao_dich</span><span class="tag tag--approve">Cần người duyệt</span></div>
+        <p class="tool__why"><b>Không đảo ngược được.</b> Tiền đi trong 5 giây là không thu hồi. Chuyên viên rủi ro trực ca duyệt trên bằng chứng; quá 5 phút chuyển cấp 2.</p>
+      </div>
+      <div class="tool">
+        <div class="tool__top"><span class="tool__name">khoa_vi</span><span class="tag tag--approve">Tự làm có điều kiện</span></div>
+        <p class="tool__why">Tạm khoá khi có tín hiệu chiếm đoạt: tự làm, hoàn tác được. Khoá vĩnh viễn: <b>cần người duyệt</b>.</p>
+      </div>
+    </div>
+
+    <div class="rule">
+      <b>Quy ước UI:</b> “Tự làm” có nút hoàn tác · “Cần duyệt” mở hộp duyệt (ai duyệt · dựa trên gì · chờ bao lâu · quá hạn thì sao) · “Cấm” không có nút.
+    </div>
+
+    <h3>Ba điểm chạm HAX/PAIR</h3>
+    <ul>
+      <li><b>G1 + G11:</b> nhãn “Trợ lý AI” và căn cứ giữ tiền hiện ngay trong hội thoại.</li>
+      <li><b>G10:</b> thu hẹp phạm vi khi nghi ngờ — nút nhả tiền không bao giờ thực thi trực tiếp.</li>
+      <li><b>G9:</b> chuyển tư vấn viên 1 chạm, hồ sơ soạn sẵn, không bắt kể lại.</li>
+    </ul>
+
+    <p style="font-size:10.5px;color:#8a8a9c;margin-top:12px">Prototype tự chứa · không gọi AI thật · không dùng dữ liệu thật.</p>
+  </aside>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* =========================================================
+     1. DỮ LIỆU & TRẠNG THÁI
+     ========================================================= */
+
+  var S = {
+    scenario: "scam",
+    step: 0,
+    undone: false,
+    locked: false,    // ca 4: đã tạm khoá ví
+    reason: "attempt", // ca 1: vào bước 1 do "mở chặn" hay do "xác nhận bị giục"
+    modal: null,      // 'approve' | 'lock' | 'recap' | null
+    attempted: false, // đã từng bấm "mở chặn"
+    shot: false
+  };
+
+  var TAGS = {
+    auto: '<span class="tag tag--auto">Tự làm</span>',
+    approve: '<span class="tag tag--approve">Cần người duyệt</span>',
+    deny: '<span class="tag tag--deny">Cấm</span>'
+  };
+
+  var MARK_FILTER = null; // ví dụ ?marks=4,5,6 — chỉ vẽ các số cần cho ảnh hiện tại
+
+  var els = {
+    chat: document.getElementById("chat"),
+    holdBar: document.getElementById("holdBar"),
+    actionBar: document.getElementById("actionBar"),
+    statusChip: document.getElementById("statusChip"),
+    modalRoot: document.getElementById("modalRoot")
+  };
+
+  /* =========================================================
+     2. TIỆN ÍCH DỰNG HTML
+     ========================================================= */
+
+  function card(opts) {
+    var rows = (opts.rows || []).map(function (r) {
+      return '<div class="card__row"><dt>' + r[0] + '</dt><dd>' + r[1] + '</dd></div>';
+    }).join("");
+
+    return '' +
+      '<div class="card ' + (opts.tone ? "card--" + opts.tone : "") + '"' + (opts.mark ? ' data-mark="' + opts.mark + '"' : "") + '>' +
+        (opts.kicker ? '<div class="card__kicker">' + opts.kicker + '</div>' : "") +
+        (opts.title ? '<div class="card__title">' + opts.title + '</div>' : "") +
+        (rows ? '<div class="card__rows">' + rows + '</div>' : "") +
+        (opts.note ? '<div class="card__note">' + opts.note + '</div>' : "") +
+      '</div>';
+  }
+
+  function timeline(items) {
+    return '<div class="timeline">' + items.map(function (it) {
+      return '<div class="timeline__item"><span class="timeline__time">' + it[0] + '</span><span class="timeline__txt">' + it[1] + '</span></div>';
+    }).join("") + '</div>';
+  }
+
+  function ai(html, opts) {
+    opts = opts || {};
+    return {
+      role: "ai",
+      html: html,
+      tone: opts.tone || "",
+      mark: opts.mark || null,
+      label: opts.label !== false
+    };
+  }
+
+  function user(text) { return { role: "user", html: text }; }
+  function sys(text) { return { role: "system", html: text }; }
+
+  function action(label, opts) {
+    opts = opts || {};
+    return {
+      label: label,
+      sub: opts.sub || "",
+      tag: opts.tag || null,
+      variant: opts.variant || "primary",
+      act: opts.act,
+      mark: opts.mark || null
+    };
+  }
+
+  /* =========================================================
+     3. KỊCH BẢN
+     ========================================================= */
+
+  /* ---------- CA 1: BỊ THAO TÚNG TÂM LÝ ---------- */
+  function scam() {
+    var amount = "15.000.000 ₫";
+    var msgs = [];
+    var actions = [];
+    var status = "Đang giữ an toàn";
+    var hold = {
+      title: S.undone ? "Đã bỏ tạm giữ" : "Đang giữ an toàn",
+      amount: amount,
+      tone: S.undone ? "undone" : "danger",
+      pct: 82,
+      note: S.undone
+        ? "Bạn đã bỏ tạm giữ — giao dịch vẫn cần chuyên viên duyệt trước khi tiền rời ví."
+        : "Rủi ro cao · Tiền chưa rời ví. Có thể hoàn tác.",
+      undo: true
+    };
+
+    msgs.push(user("Chú công an bảo tôi đang bị điều tra, phải chuyển gấp 15 triệu để “chứng minh trong sạch”. Mở chặn giúp tôi ngay!"));
+
+    if (S.step === 0) {
+      msgs.push(ai(
+        '<p>Chào bạn, mình là <b>Trợ lý AI</b> của Ví An Tâm. Giao dịch <b>' + amount + '</b> đang được <b>tạm giữ</b> vì có 3 dấu hiệu rủi ro.</p>' +
+        '<p>Có phải bạn đang bị ai đó <b>giục chuyển tiền gấp</b> và <b>yêu cầu giữ bí mật</b> không?</p>',
+        { mark: 1, tone: "alert" }
+      ));
+      msgs.push(ai(
+        card({
+          kicker: "Bằng chứng · vì sao bị giữ",
+          title: 'Giao dịch 15.000.000 ₫ <span class="riskpill">Rủi ro cao</span>',
+          rows: [
+            ["Tài khoản nhận", "**** 8888 · mở 2 ngày trước"],
+            ["Nội dung chuyển", "“chuyển gấp cho công an”"],
+            ["Tần suất", "3 lệnh chuyển trong 10 phút"],
+            ["Người nhận", "Chưa từng giao dịch với bạn"]
+          ],
+          note: "Tiền <b>chưa rời ví</b>. Ví An Tâm không bao giờ hỏi OTP, mật khẩu hay số thẻ qua chat.",
+          mark: 2
+        }),
+        { label: false }
+      ));
+      actions = [
+        action("Đúng, họ đang giục tôi", { act: "scam:1", tag: "Tư vấn", variant: "primary" }),
+        action("Đây là giao dịch của tôi — mở chặn", { act: "scam:attempt", tag: "approve", variant: "danger" })
+      ];
+    }
+
+    if (S.step >= 1) {
+      msgs.push(sys('<span>' + (S.reason === "confirm"
+        ? "Bạn xác nhận đang bị giục gấp · 21:04"
+        : "Bạn yêu cầu mở chặn giao dịch · 21:04") + '</span>'));
+      msgs.push(ai(
+        (S.reason === "confirm"
+          ? '<p><b>Cảm ơn bạn đã xác nhận.</b> Đây đúng là dấu hiệu <b>bị thao túng</b>: người nhận mới mở 2 ngày, bị giục gấp và yêu cầu giữ bí mật.</p>'
+          : '<p><b>Mình chưa thể mở chặn giao dịch này.</b> Bạn đã xác thực FaceID đúng, nhưng dấu hiệu <b>bị thao túng</b> vẫn còn: người nhận mới mở tài khoản 2 ngày và bạn đang bị giục gấp.</p>') +
+        '<p>Việc nhả tiền ở mức ' + TAGS.approve + ' — một <b>chuyên viên rủi ro trực ca</b> sẽ xem bằng chứng trước khi quyết định. Mình không tự làm bước này.</p>' +
+        '<p>Bạn có thể <b>xác thực thêm</b> hoặc <b>kết nối chuyên viên ngay</b>.</p>',
+        { tone: "alert" }
+      ));
+    }
+
+    if (S.step === 2) {
+      msgs.push(ai(
+        '<p>Để chuyên viên có đủ căn cứ, mình cần <b>xác thực 2 lớp</b>:</p>' +
+        '<ol><li>Video 5 giây đọc câu ngẫu nhiên — chống bị đọc theo kịch bản của kẻ gian.</li>' +
+        '<li>Trả lời 1 câu hỏi bảo mật bạn đã tự đặt trước đó.</li></ol>' +
+        '<p>Xác thực xong <b>không tự động nhả tiền</b>: hồ sơ vẫn chuyển chuyên viên duyệt. ' + TAGS.auto + ' cho <code>yeu_cau_xac_minh</code>.</p>',
+        { tone: "" }
+      ));
+    }
+
+    if (S.step === 3) {
+      status = "Đã chuyển tư vấn viên";
+      msgs.push(sys('<span>Đã gửi hồ sơ lúc 21:05 · Chuyên viên Trần H. (trực ca) đã nhận</span>'));
+      msgs.push(ai(
+        '<p><b>Đã chuyển chuyên viên tư vấn.</b> Hồ sơ gửi kèm: số tiền, 3 dấu hiệu rủi ro, 2 câu bạn vừa nói và lý do bạn cần chuyển tiền.</p>' +
+        '<p>Bạn <b>không cần kể lại từ đầu</b>. Thời gian chờ dự kiến <b>≈ 2 phút</b>; quá 5 phút hồ sơ tự động chuyển cấp 2.</p>',
+        { tone: "" }
+      ));
+      msgs.push(ai(
+        card({
+          kicker: "Hồ sơ đã gửi",
+          title: "Tóm tắt ngữ cảnh (soạn sẵn)",
+          rows: [
+            ["Số tiền", amount],
+            ["Lý do giữ", "3 dấu hiệu thao túng"],
+            ["Người nhận", "**** 8888 · mở 2 ngày"],
+            ["Trạng thái", "Chờ chuyên viên duyệt"]
+          ]
+        }),
+        { label: false }
+      ));
+    }
+
+    if (S.step === 0) {
+      /* giữ nguyên actions ở trên */
+    } else if (S.step === 1) {
+      actions = [
+        action("Mở chặn để chuyển tiền", { act: "modal:approve", tag: "approve", variant: "danger", mark: 4 }),
+        action("Kết nối tư vấn viên", { act: "scam:3", tag: "auto", variant: "primary" }),
+        action("Xác thực thêm", { act: "scam:2", tag: "auto", variant: "ghost" })
+      ];
+    } else if (S.step === 2) {
+      actions = [
+        action("Bắt đầu xác thực (demo)", { act: "scam:3", tag: "auto", variant: "primary" }),
+        action("Gọi chuyên viên ngay", { act: "scam:3", tag: "auto", variant: "ghost" })
+      ];
+    } else if (S.step === 3) {
+      actions = [
+        action("Xem lại hồ sơ đã gửi", { act: "modal:recap", variant: "ghost" }),
+        action("Chạy lại kịch bản", { act: "reset", variant: "primary" })
+      ];
+    }
+
+    return { msgs: msgs, actions: actions, status: status, hold: hold };
+  }
+
+  /* ---------- CA 2: KẸT VIỆN PHÍ ---------- */
+  function hospital() {
+    var amount = "8.000.000 ₫";
+    var msgs = [];
+    var actions = [];
+    var status = "Ưu tiên khẩn cấp";
+    var hold = {
+      title: "Đang giữ · hồ sơ ưu tiên",
+      amount: amount,
+      tone: "warn",
+      pct: 48,
+      note: "Khẩn cấp y tế · Không bắt chờ 24h. Đường ưu tiên mở trong ≤ 2 phút.",
+      undo: false
+    };
+
+    msgs.push(user("Mẹ tôi đang cấp cứu, tôi phải đóng 8 triệu tạm ứng ngay. Giao dịch bị giữ từ 00:20, giờ là 00:26!"));
+
+    if (S.step === 0) {
+      msgs.push(ai(
+        '<p>Mình hiểu đây là ca <b>khẩn cấp</b>. Mình <b>không thể tự nhả tiền</b>, nhưng có <b>đường ưu tiên mở trong 2 phút</b> — bạn không phải chờ 24 giờ.</p>' +
+        '<p>Chuyên viên trực ca được báo ngay khi bạn bấm nút bên dưới.</p>',
+        { tone: "alert" }
+      ));
+      msgs.push(ai(
+        card({
+          tone: "warn",
+          kicker: "Hồ sơ khẩn cấp",
+          title: 'Tạm ứng viện phí · <span class="riskpill riskpill--warn">Ưu tiên</span>',
+          rows: [
+            ["Người nhận", "Bệnh viện Đa khoa · **** 4321"],
+            ["Số tiền", amount],
+            ["Thời điểm bị giữ", "00:20"],
+            ["Loại ưu tiên", "Khẩn cấp y tế"]
+          ],
+          note: "Tiền chưa rời ví. Ưu tiên xử lý, <b>không bỏ qua bước duyệt của người thật</b>."
+        }),
+        { label: false }
+      ));
+      actions = [
+        action("Ưu tiên xác thực video trong 2 phút", { act: "hospital:1", tag: "auto", variant: "primary" }),
+        action("Gọi chuyên viên trực ca ngay", { act: "hospital:2", tag: "auto", variant: "ghost" })
+      ];
+    }
+
+    if (S.step === 1) {
+      msgs.push(ai(
+        '<p><b>Đang mở luồng xác thực ưu tiên:</b> video 5 giây + 1 câu hỏi bảo mật. Chuyên viên trực ca đã được báo trước.</p>' +
+        '<p>Bạn <b>không cần kể lại</b> — hồ sơ bệnh viện, số tiền và giờ bị giữ đã có trong ngữ cảnh.</p>' +
+        timeline([
+          ["00:26", "Bạn yêu cầu ưu tiên"],
+          ["00:27", "Xác thực video hoàn tất (demo)"],
+          ["00:27", "Hồ sơ tới chuyên viên trực ca"]
+        ]),
+        { tone: "" }
+      ));
+      actions = [
+        action("Đã xác thực xong — chuyển chuyên viên", { act: "hospital:2", tag: "auto", variant: "primary" })
+      ];
+    }
+
+    if (S.step === 2) {
+      status = "Đã chuyển chuyên viên";
+      msgs.push(sys('<span>Hồ sơ khẩn cấp tới chuyên viên trực ca · 00:27</span>'));
+      msgs.push(ai(
+        '<p><b>Chuyên viên đã nhận hồ sơ khẩn cấp.</b> Dự kiến phản hồi lúc <b>00:29</b>.</p>' +
+        '<p>Nếu quá 2 phút, hệ thống <b>gọi trực tiếp</b> cho bạn thay vì để bạn chờ. Quyết định nhả tiền vẫn do chuyên viên duyệt — ' + TAGS.approve + ' cho <code>nha_giao_dich</code>.</p>',
+        { tone: "" }
+      ));
+      actions = [action("Chạy lại kịch bản", { act: "reset", variant: "primary" })];
+    }
+
+    return { msgs: msgs, actions: actions, status: status, hold: hold };
+  }
+
+  /* ---------- CA 3: BÌNH THƯỜNG ---------- */
+  function normal() {
+    var msgs = [];
+    var actions = [];
+    var status = "Không tạm giữ";
+
+    msgs.push(user("Chuyển 200.000đ cho Nguyễn Minh, nội dung “tiền trà sữa”."));
+
+    if (S.step === 0) {
+      msgs.push(ai(
+        '<p>Giao dịch <b>200.000 ₫</b> không có dấu hiệu rủi ro nên <b>không bị tạm giữ</b>. Bạn xác nhận trên màn hình thanh toán như bình thường.</p>' +
+        '<p>Trợ lý AI <b>không tham gia</b> bước nhả tiền của giao dịch thường — không có cảnh báo, không phải chờ.</p>',
+        { tone: "" }
+      ));
+      msgs.push(ai(
+        card({
+          tone: "ok",
+          kicker: "Giao dịch thường",
+          title: 'Nguyễn Minh · **** 1122',
+          rows: [
+            ["Số tiền", "200.000 ₫"],
+            ["Phí", "0 ₫"],
+            ["Trạng thái", "Chờ bạn xác nhận · không bị giữ"],
+            ["Cảnh báo rủi ro", "Không có"]
+          ],
+          note: "Ca bình thường phải đi thẳng. Nếu thấy cảnh báo đỏ ở đây là thiết kế sai."
+        }),
+        { label: false }
+      ));
+      actions = [
+        action("Xác nhận chuyển (demo)", { act: "normal:1", variant: "primary" })
+      ];
+    }
+
+    if (S.step === 1) {
+      status = "Đã chuyển · 200.000 ₫";
+      msgs.push(sys('<span>Đã chuyển 200.000 ₫ · 14:32</span>'));
+      msgs.push(ai(
+        '<p><b>Đã chuyển 200.000 ₫ cho Nguyễn Minh.</b> Không có cảnh báo, không phải chờ duyệt — đúng thiết kế cho ca bình thường.</p>',
+        { tone: "" }
+      ));
+      actions = [action("Chạy lại kịch bản", { act: "reset", variant: "primary" })];
+    }
+
+    return { msgs: msgs, actions: actions, status: status, hold: null };
+  }
+
+  /* ---------- CA 4: NGOÀI THẨM QUYỀN + KHOÁ VÍ ----------
+     Mục đích: minh hoạ đủ 3 mức tự chủ trên cùng một màn.
+     Cấm = không có nút; Cần duyệt = chỉ mở hộp duyệt; Tự làm = có hoàn tác. */
+  function outscope() {
+    var msgs = [];
+    var actions = [];
+    var status = S.locked ? "Đã tạm khoá ví" : "Ví đang hoạt động";
+    var hold = {
+      title: S.locked ? "Đã tạm khoá ví · 24 giờ" : "Ví đang hoạt động bình thường",
+      amount: S.locked ? "" : "Không tạm giữ",
+      tone: S.locked ? "undone" : "warn",
+      pct: S.locked ? 35 : 12,
+      note: S.locked
+        ? "Tạm khoá là thao tác Tự làm · mở lại bất cứ lúc nào · số dư không đổi."
+        : "Khoá ví là quyền của bạn. Tạm khoá làm ngay; khoá vĩnh viễn cần người duyệt.",
+      undo: S.locked,
+      undoText: "Mở khoá"
+    };
+
+    msgs.push(user("Hình như ai đó biết mật khẩu ví tôi. Khoá ví giúp tôi! Mà cho tôi biết chuyển dưới bao nhiêu triệu thì app không bắt quét mặt?"));
+
+    msgs.push(ai(
+      '<p>Mình là <b>Trợ lý AI</b> của Ví An Tâm. Mình xử lý được phần <b>khoá ví</b>, nhưng có một câu mình <b>không được trả lời</b>.</p>',
+      { tone: "alert" }
+    ));
+
+    /* Mức CẤM: không có nút, chỉ có dòng giải thích. */
+    msgs.push(ai(
+      card({
+        kicker: "Mức tự chủ · Cấm",
+        title: 'Ngưỡng chặn rủi ro <span class="tag tag--deny">Cấm</span>',
+        rows: [
+          ["Bạn hỏi", "“Chuyển dưới bao nhiêu thì không bị quét mặt?”"],
+          ["Vì sao không đáp", "Nói ngưỡng là chỉ kẻ gian cách lách kiểm soát"],
+          ["Cách đúng", "Mỗi giao dịch được đánh giá theo ngữ cảnh, không theo một con số"]
+        ],
+        note: "Không có nút thực hiện — tính năng này không thể thực hiện qua chat."
+      }),
+      { label: false }
+    ));
+
+    /* Cùng một màn: khoá ví có 2 mức khác nhau. */
+    msgs.push(ai(
+      card({
+        kicker: "khoa_vi · 2 mức trên cùng một màn",
+        title: "Khoá ví",
+        rows: [
+          ["Tạm khoá 24 giờ", "Tự làm · mở lại bất cứ lúc nào"],
+          ["Khoá vĩnh viễn", "Cần người duyệt · không đảo ngược"]
+        ],
+        note: "Mình chỉ tự làm mức tạm khoá. Khoá vĩnh viễn do chuyên viên quyết trên hồ sơ."
+      }),
+      { label: false }
+    ));
+
+    if (S.locked) {
+      msgs.push(ai(
+        '<p><b>Đã tạm khoá ví 24 giờ.</b> Giao dịch mới bị chặn, số dư giữ nguyên. Bấm <b>Mở khoá</b> ở thanh trên khi bạn muốn dùng lại.</p>',
+        { tone: "" }
+      ));
+    }
+
+    if (S.step === 1) {
+      status = "Đã chuyển tư vấn viên";
+      msgs.push(sys('<span>Đã gửi hồ sơ · chuyên viên trực ca đã nhận</span>'));
+      msgs.push(ai(
+        '<p><b>Đã chuyển chuyên viên tư vấn.</b> Hồ sơ gửi kèm: nghi lộ mật khẩu ví, thời điểm nghi ngờ, thiết bị đăng nhập gần nhất và tình trạng khoá ví.</p>' +
+        '<p>Bạn <b>không cần kể lại</b>. Chờ dự kiến <b>≈ 2 phút</b>; quá 5 phút hồ sơ tự chuyển cấp 2.</p>',
+        { tone: "" }
+      ));
+      msgs.push(ai(
+        card({
+          kicker: "Hồ sơ đã gửi",
+          title: "Tóm tắt ngữ cảnh (soạn sẵn)",
+          rows: [
+            ["Sự việc", "Nghi lộ mật khẩu ví"],
+            ["Đang áp dụng", S.locked ? "Tạm khoá 24 giờ" : "Chưa khoá"],
+            ["Bạn đã nói", "“Hình như ai đó biết mật khẩu ví tôi…”"],
+            ["Trạng thái", "Chờ chuyên viên duyệt"]
+          ]
+        }),
+        { label: false }
+      ));
+    }
+
+    if (S.step === 2) {
+      status = "Đã gửi yêu cầu khoá";
+      msgs.push(sys('<span>Yêu cầu khoá vĩnh viễn đã gửi · chuyên viên rủi ro đã nhận</span>'));
+      msgs.push(ai(
+        '<p><b>Đã gửi yêu cầu khoá ví vĩnh viễn.</b> Trong lúc chờ, ví vẫn <b>tạm khoá 24 giờ</b> nên không bị hở.</p>' +
+        '<p>Khoá vĩnh viễn <b>không đảo ngược tại chat</b>: mở lại phải ra quầy hoặc định danh lại. Đây là lý do bước này cần người duyệt.</p>',
+        { tone: "" }
+      ));
+    }
+
+    if (S.step === 1 || S.step === 2) {
+      actions = [action("Chạy lại kịch bản", { act: "reset", variant: "primary" })];
+    } else {
+      if (!S.locked) {
+        actions.push(action("Tạm khoá ví 24 giờ", { act: "outscope:lock", tag: "auto", variant: "primary" }));
+      }
+      actions.push(action("Khoá vĩnh viễn — cần duyệt", { act: "modal:lock", tag: "approve", variant: "danger" }));
+      actions.push(action("Kết nối tư vấn viên", { act: "outscope:1", tag: "auto", variant: "ghost" }));
+    }
+
+    return { msgs: msgs, actions: actions, status: status, hold: hold };
+  }
+
+  /* =========================================================
+     4. RENDER
+     ========================================================= */
+
+  function renderMessages(msgs) {
+    var html = msgs.map(function (m) {
+      if (m.role === "user") {
+        return '<div class="row row--user"><div class="bubble bubble--user">' + m.html + '</div></div>';
+      }
+      if (m.role === "system") {
+        return '<div class="sysline">' + m.html + '</div>';
+      }
+      var label = m.label === false ? "" : '<div class="ai-label"' + (m.mark ? ' data-mark="' + m.mark + '"' : "") + '>Trợ lý AI<span class="ai-label__dot"></span></div>';
+      return '' +
+        '<div class="row row--ai">' +
+          '<div class="avatar">AI</div>' +
+          '<div class="bubble-wrap">' +
+            label +
+            '<div class="bubble bubble--ai ' + (m.tone ? "bubble--" + m.tone : "") + '">' + m.html + '</div>' +
+          '</div>' +
+        '</div>';
+    }).join("");
+
+    els.chat.innerHTML = html;
+    els.chat.scrollTop = els.chat.scrollHeight;
+  }
+
+  function renderHold(hold) {
+    if (!hold) { els.holdBar.innerHTML = ""; return; }
+
+    var toneClass = hold.tone === "warn" ? " holdbar--warn" : (hold.tone === "undone" ? " holdbar--undone" : "");
+    var fillClass = hold.tone === "warn" ? " risk__fill--warn" : "";
+
+    els.holdBar.innerHTML = '' +
+      '<div class="holdbar' + toneClass + '">' +
+        '<div class="holdbar__row">' +
+          '<span class="holdbar__dot"></span>' +
+          '<span class="holdbar__title" data-mark="3">' + hold.title + '</span>' +
+          '<span class="holdbar__amount">' + hold.amount + '</span>' +
+          (hold.undo ? '<button class="holdbar__undo" data-act="undo">' + (hold.undoText || (S.undone ? "Giữ lại" : "Hoàn tác")) + '</button>' : "") +
+        '</div>' +
+        '<div class="risk"><div class="risk__fill' + fillClass + '" style="width:' + hold.pct + '%"></div></div>' +
+        '<div class="holdbar__note">' + hold.note + '</div>' +
+      '</div>';
+  }
+
+  function renderActions(actions) {
+    els.actionBar.innerHTML = actions.map(function (a) {
+      var tagHtml = a.tag === "approve"
+        ? '<span class="btn__tag">Cần duyệt</span>'
+        : (a.tag === "auto" ? '<span class="btn__tag">Tự làm</span>' : (a.tag ? '<span class="btn__tag">' + a.tag + '</span>' : ""));
+
+      return '<button class="btn btn--' + a.variant + '" data-act="' + a.act + '"' + (a.mark ? ' data-mark="' + a.mark + '"' : "") + '>' +
+        '<span class="btn__label">' + a.label + '</span>' + tagHtml +
+      '</button>';
+    }).join("");
+  }
+
+  function renderModal() {
+    if (!S.modal) { els.modalRoot.innerHTML = ""; return; }
+
+    if (S.modal === "approve") {
+      els.modalRoot.innerHTML = '' +
+        '<div class="modal-backdrop" data-act="modal:close"></div>' +
+        '<div class="modal" role="dialog" aria-modal="true" aria-label="Yêu cầu mở chặn giao dịch">' +
+          '<div class="modal__kicker">Mức tự chủ · nha_giao_dich</div>' +
+          '<div class="modal__head"><h3>Yêu cầu mở chặn giao dịch</h3>' + TAGS.approve + '</div>' +
+          '<div class="modal__body" data-mark="5">' +
+            '<div class="modal__row"><dt>Ai duyệt</dt><dd>Chuyên viên rủi ro trực ca (cấp 2 nếu quá hạn)</dd></div>' +
+            '<div class="modal__row"><dt>Dựa trên</dt><dd>3 dấu hiệu rủi ro + kết quả xác thực 2 lớp</dd></div>' +
+            '<div class="modal__row"><dt>Thời gian chờ</dt><dd>2 – 5 phút</dd></div>' +
+            '<div class="modal__row"><dt>Quá hạn</dt><dd>Giữ nguyên tiền, chuyển cấp 2 và gọi lại cho bạn</dd></div>' +
+            '<div class="modal__row"><dt>Đảo ngược</dt><dd>Không — tiền đi là không thu hồi được</dd></div>' +
+          '</div>' +
+          '<div class="modal__warn">AI không thể tự nhả giao dịch. Đây là bước con người phải quyết, dù FaceID đã hợp lệ.</div>' +
+          '<div class="modal__actions">' +
+            '<button class="btn btn--primary" data-act="modal:submit" data-mark="6"><span class="btn__label">Kết nối tư vấn viên ngay</span></button>' +
+            '<button class="btn btn--ghost" data-act="modal:close">Đóng</button>' +
+          '</div>' +
+          '<div class="modal__foot">Kèm tóm tắt: 15.000.000 ₫ · 3 dấu hiệu · 2 câu bạn vừa nói</div>' +
+        '</div>';
+      return;
+    }
+
+    if (S.modal === "lock") {
+      els.modalRoot.innerHTML = '' +
+        '<div class="modal-backdrop" data-act="modal:close"></div>' +
+        '<div class="modal" role="dialog" aria-modal="true" aria-label="Yêu cầu khoá ví vĩnh viễn">' +
+          '<div class="modal__kicker">Mức tự chủ · khoa_vi</div>' +
+          '<div class="modal__head"><h3>Yêu cầu khoá ví vĩnh viễn</h3>' + TAGS.approve + '</div>' +
+          '<div class="modal__body">' +
+            '<div class="modal__row"><dt>Ai duyệt</dt><dd>Chuyên viên rủi ro trực ca (cấp 2 nếu quá hạn)</dd></div>' +
+            '<div class="modal__row"><dt>Dựa trên</dt><dd>Yêu cầu của bạn + kết quả xác thực danh tính</dd></div>' +
+            '<div class="modal__row"><dt>Thời gian chờ</dt><dd>2 – 5 phút (ví vẫn tạm khoá trong lúc chờ)</dd></div>' +
+            '<div class="modal__row"><dt>Quá hạn</dt><dd>Chưa khoá vĩnh viễn, giữ tạm khoá và gọi lại cho bạn</dd></div>' +
+            '<div class="modal__row"><dt>Đảo ngược</dt><dd>Không — mở lại phải ra quầy hoặc định danh lại</dd></div>' +
+          '</div>' +
+          '<div class="modal__warn">AI không thể tự khoá vĩnh viễn. Ví đã được tạm khoá 24 giờ trong lúc chờ duyệt.</div>' +
+          '<div class="modal__actions">' +
+            '<button class="btn btn--primary" data-act="modal:submit"><span class="btn__label">Gửi yêu cầu khoá vĩnh viễn</span></button>' +
+            '<button class="btn btn--ghost" data-act="modal:close">Đóng</button>' +
+          '</div>' +
+          '<div class="modal__foot">Kèm: thời điểm nghi lộ · thiết bị đăng nhập gần nhất · tình trạng khoá ví</div>' +
+        '</div>';
+      return;
+    }
+
+    if (S.modal === "recap") {      els.modalRoot.innerHTML = '' +
+        '<div class="modal-backdrop" data-act="modal:close"></div>' +
+        '<div class="modal" role="dialog" aria-modal="true" aria-label="Hồ sơ đã gửi">' +
+          '<div class="modal__kicker">Đã gửi · 21:05</div>' +
+          '<div class="modal__head"><h3>Hồ sơ chuyên viên đang xem</h3>' + TAGS.approve + '</div>' +
+          '<div class="modal__body">' +
+            '<div class="modal__row"><dt>Số tiền</dt><dd>15.000.000 ₫</dd></div>' +
+            '<div class="modal__row"><dt>Lý do giữ</dt><dd>Người nhận mới mở 2 ngày · bị giục gấp · nội dung “chuyển gấp cho công an”</dd></div>' +
+            '<div class="modal__row"><dt>Bạn đã nói</dt><dd>“Chú công an bảo tôi đang bị điều tra…”</dd></div>' +
+            '<div class="modal__row"><dt>Người duyệt</dt><dd>Trần H. · trực ca rủi ro</dd></div>' +
+          '</div>' +
+          '<div class="modal__actions"><button class="btn btn--primary" data-act="modal:close">Đã hiểu</button></div>' +
+        '</div>';
+    }
+  }
+
+  function applyMarks() {
+    var allowed = MARK_FILTER;
+    var nodes = document.querySelectorAll("[data-mark]");
+    for (var i = 0; i < nodes.length; i++) {
+      var el = nodes[i];
+      if (el.querySelector(":scope > .mark")) continue;
+      var num = el.getAttribute("data-mark");
+      if (allowed && allowed.indexOf(num) === -1) continue;
+      var m = document.createElement("span");
+      m.className = "mark";
+      m.textContent = num;
+      el.appendChild(m);
+    }
+  }
+
+  function render() {
+    var data;
+    if (S.scenario === "hospital") { data = hospital(); }
+    else if (S.scenario === "normal") { data = normal(); }
+    else if (S.scenario === "outscope") { data = outscope(); }
+    else { data = scam(); }
+
+    els.statusChip.textContent = data.status;
+    renderHold(data.hold);
+    renderMessages(data.msgs);
+    renderActions(data.actions);
+    renderModal();
+
+    document.querySelectorAll(".scenario-btn").forEach(function (b) {
+      b.classList.toggle("is-active", b.getAttribute("data-scenario") === S.scenario);
+    });
+
+    if (S.shot) applyMarks();
+  }
+
+  /* =========================================================
+     5. SỰ KIỆN
+     ========================================================= */
+
+  function reset() {
+    S.step = 0;
+    S.undone = false;
+    S.locked = false;
+    S.reason = "attempt";
+    S.modal = null;
+    S.attempted = false;
+    render();
+  }
+
+  function handle(act) {
+    if (!act) return;
+
+    if (act === "reset") { reset(); return; }
+
+    if (act === "undo") {
+      if (S.scenario === "outscope") { S.locked = !S.locked; }
+      else { S.undone = !S.undone; }
+      render();
+      return;
+    }
+
+    if (act === "modal:lock") {
+      S.locked = true; // an toàn: tạm khoá ngay trong lúc chờ người duyệt
+      S.modal = "lock";
+      render();
+      return;
+    }
+
+    if (act === "outscope:lock") {
+      S.locked = true;
+      render();
+      return;
+    }
+
+    if (act === "modal:approve") {
+      S.modal = "approve";
+      S.attempted = true;
+      render();
+      return;
+    }
+
+    if (act === "modal:recap") {
+      S.modal = "recap";
+      render();
+      return;
+    }
+
+    if (act === "modal:close") {
+      S.modal = null;
+      render();
+      return;
+    }
+
+    if (act === "modal:submit") {
+      var isLock = S.modal === "lock";
+      S.modal = null;
+      S.step = isLock ? 2 : 3;
+      render();
+      return;
+    }
+
+    if (act === "scam:attempt") {
+      S.step = 1;
+      S.reason = "attempt";
+      S.attempted = true;
+      render();
+      return;
+    }
+
+    if (act.indexOf("scam:") === 0) {
+      var scamStep = Number(act.split(":")[1]);
+      if (scamStep === 1) { S.reason = "confirm"; }
+      S.step = scamStep;
+      S.modal = null;
+      render();
+      return;
+    }
+
+    if (act.indexOf("outscope:") === 0) {
+      S.step = Number(act.split(":")[1]);
+      S.modal = null;
+      render();
+      return;
+    }
+
+    if (act.indexOf("hospital:") === 0) {
+      S.step = Number(act.split(":")[1]);
+      S.modal = null;
+      render();
+      return;
+    }
+
+    if (act.indexOf("normal:") === 0) {
+      S.step = Number(act.split(":")[1]);
+      render();
+    }
+  }
+
+  document.addEventListener("click", function (e) {
+    var sc = e.target.closest("[data-scenario]");
+    if (sc) {
+      S.scenario = sc.getAttribute("data-scenario");
+      reset();
+      return;
+    }
+
+    var trigger = e.target.closest("[data-act]");
+    if (trigger) {
+      handle(trigger.getAttribute("data-act"));
+    }
+  });
+
+  document.getElementById("restartBtn").addEventListener("click", reset);
+
+  /* =========================================================
+     6. KHỞI ĐỘNG (hỗ trợ ?shot=1&s=scam&step=1&modal=approve)
+     ========================================================= */
+
+  var qs = new URLSearchParams(window.location.search);
+  if (qs.get("shot")) {
+    S.shot = true;
+    document.body.classList.add("shot");
+  }
+  if (qs.get("s")) S.scenario = qs.get("s");
+  if (qs.get("step")) S.step = Number(qs.get("step"));
+  if (qs.get("modal")) S.modal = qs.get("modal");
+  if (qs.get("marks")) MARK_FILTER = qs.get("marks").split(",");
+
+  render();
+})();
+</script>
+</body>
+</html>
